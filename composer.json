@@ -1,0 +1,30 @@
+{
+    "name": "simonreitinger/contao-push-bundle",
+    "description": "Add Push Notifications to your Contao website",
+    "type": "contao-bundle",
+    "authors": [
+        {
+            "name": "Simon Reitinger",
+            "email": "s.reitinger@agentur-dreibein.de"
+        }
+    ],
+    "require": {
+        "contao/core-bundle": "^4.8",
+        "minishlink/web-push-bundle": "^5.0"
+    },
+    "require-dev": {
+        "contao/manager-plugin": "^2.0",
+        "friendsofphp/php-cs-fixer": "^2.14"
+    },
+    "conflict": {
+        "contao/manager-plugin": "<2.0 || >=3.0"
+    },
+    "extra": {
+        "contao-manager-plugin": "SimonReitinger\\ContaoPushBundle\\ContaoManager\\Plugin"
+    },
+    "autoload": {
+        "psr-4": {
+            "SimonReitinger\\ContaoPushBundle\\": "src"
+        }
+    }
+}

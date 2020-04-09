@@ -1,0 +1,33 @@
+services:
+    SimonReitinger\ContaoPushBundle\Controller\PushController:
+        public: true
+        arguments:
+            - '@SimonReitinger\ContaoPushBundle\Model\PushProvider'
+            - '@monolog.logger.contao'
+        tags:
+            - { name: 'controller.argument_value_resolver' }
+
+    SimonReitinger\ContaoPushBundle\Model\PushProvider: ~
+
+    SimonReitinger\ContaoPushBundle\Push\PushManager:
+        arguments:
+            - '@minishlink_web_push'
+            - '@SimonReitinger\ContaoPushBundle\Model\PushProvider'
+            - '@monolog.logger.contao'
+
+    SimonReitinger\ContaoPushBundle\Controller\FrontendModule\PushNotificationButton:
+        arguments:
+            - '@translator'
+        tags:
+            - { name: 'contao.frontend_module', category: 'push' }
+
+    SimonReitinger\ContaoPushBundle\DataContainer\News:
+        arguments:
+            - '@SimonReitinger\ContaoPushBundle\Push\PushManager'
+            - '@request_stack'
+        tags:
+            - { name: 'contao.callback', target: 'config.onload', table: 'tl_news', method: onLoad }
+
+    SimonReitinger\ContaoPushBundle\EventListener\ServiceWorkerSymlinkListener:
+        tags:
+            - { name: 'contao.create_symlinks' }

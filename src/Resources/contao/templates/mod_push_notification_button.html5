@@ -1,0 +1,2 @@
+<button id="enable-push-subscription-button"><?= $this->enableText ?></button>
+<button id="disable-push-subscription-button"><?= $this->disableText ?></button>
