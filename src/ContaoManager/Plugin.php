@@ -14,14 +14,17 @@ use Contao\ManagerPlugin\Bundle\BundlePluginInterface;
 use Contao\ManagerPlugin\Bundle\Config\BundleConfig;
 use Contao\ManagerPlugin\Bundle\Parser\ParserInterface;
 use Contao\ManagerPlugin\Config\ConfigPluginInterface;
+use Contao\ManagerPlugin\Config\ContainerBuilder;
+use Contao\ManagerPlugin\Config\ExtensionPluginInterface;
 use Contao\ManagerPlugin\Routing\RoutingPluginInterface;
 use Minishlink\Bundle\WebPushBundle\MinishlinkWebPushBundle;
 use SimonReitinger\ContaoPushBundle\ContaoPushBundle;
+use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\Config\Loader\LoaderResolverInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 
-class Plugin implements BundlePluginInterface, ConfigPluginInterface, RoutingPluginInterface
+class Plugin implements BundlePluginInterface, ConfigPluginInterface, RoutingPluginInterface, ExtensionPluginInterface
 {
     /**
      * {@inheritdoc}
@@ -32,6 +35,7 @@ class Plugin implements BundlePluginInterface, ConfigPluginInterface, RoutingPlu
             BundleConfig::create(MinishlinkWebPushBundle::class),
             BundleConfig::create(ContaoPushBundle::class)
                 ->setLoadAfter([
+                    FrameworkBundle::class,
                     ContaoCoreBundle::class,
                     MinishlinkWebPushBundle::class,
                 ]),
@@ -39,15 +43,15 @@ class Plugin implements BundlePluginInterface, ConfigPluginInterface, RoutingPlu
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
-    public function registerContainerConfiguration(LoaderInterface $loader, array $managerConfig)
+    public function registerContainerConfiguration(LoaderInterface $loader, array $managerConfig): void
     {
         $loader->load(__DIR__ . '/../Resources/config/services.yml');
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getRouteCollection(LoaderResolverInterface $resolver, KernelInterface $kernel)
     {
@@ -57,5 +61,25 @@ class Plugin implements BundlePluginInterface, ConfigPluginInterface, RoutingPlu
             ->resolve($file)
             ->load($file)
         ;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getExtensionConfig($extensionName, array $extensionConfigs, ContainerBuilder $container)
+    {
+        // translations
+        if ($extensionName === 'framework') {
+            $extensionConfigs[0]['translator']['paths'][] = '%kernel.project_dir%/vendor/simonreitinger/contao-push-bundle/src/Resources/translations';
+        }
+
+        // doctrine mapping
+        if ($extensionName === 'doctrine') {
+            $extensionConfigs[0]['orm']['mappings']['ContaoPushBundle'] = [
+                'type' => 'annotation',
+            ];
+        }
+
+        return $extensionConfigs;
     }
 }
