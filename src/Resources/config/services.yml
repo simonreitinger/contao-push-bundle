@@ -2,32 +2,46 @@ services:
     SimonReitinger\ContaoPushBundle\Controller\PushController:
         public: true
         arguments:
-            - '@SimonReitinger\ContaoPushBundle\Model\PushProvider'
+            - '@doctrine.orm.entity_manager'
+            - '@contao_push.repository.push'
             - '@monolog.logger.contao'
         tags:
-            - { name: 'controller.argument_value_resolver' }
+            - { name: controller.argument_value_resolver }
 
-    SimonReitinger\ContaoPushBundle\Model\PushProvider: ~
-
-    SimonReitinger\ContaoPushBundle\Push\PushManager:
-        arguments:
-            - '@minishlink_web_push'
-            - '@SimonReitinger\ContaoPushBundle\Model\PushProvider'
-            - '@monolog.logger.contao'
-
-    SimonReitinger\ContaoPushBundle\Controller\FrontendModule\PushNotificationButton:
+    contao_push.controller.module_push_notification_button:
+        class: SimonReitinger\ContaoPushBundle\Controller\FrontendModule\PushNotificationButton
         arguments:
             - '@translator'
+            - '@parameter_bag'
         tags:
-            - { name: 'contao.frontend_module', category: 'push' }
+            - { name: contao.frontend_module, category: push }
 
-    SimonReitinger\ContaoPushBundle\DataContainer\News:
+    contao_push.data_container.news:
+        class: SimonReitinger\ContaoPushBundle\DataContainer\News
         arguments:
-            - '@SimonReitinger\ContaoPushBundle\Push\PushManager'
+            - '@contao_push.manager'
             - '@request_stack'
+            - '@contao.framework'
         tags:
-            - { name: 'contao.callback', target: 'config.onload', table: 'tl_news', method: onLoad }
+            - { name: contao.callback, target: config.onload, table: tl_news, method: onLoad }
 
-    SimonReitinger\ContaoPushBundle\EventListener\ServiceWorkerSymlinkListener:
+    contao_push.listener.symlink.service_worker:
+        class: SimonReitinger\ContaoPushBundle\EventListener\ServiceWorkerSymlinkListener
         tags:
-            - { name: 'contao.create_symlinks' }
+            - { name: kernel.event_listener, event: contao.generate_symlinks, method: onGenerateSymlinks, priority: 128 }
+
+    contao_push.manager:
+        class: SimonReitinger\ContaoPushBundle\Push\PushManager
+        public: true
+        arguments:
+            - '@minishlink_web_push'
+            - '@doctrine.orm.entity_manager'
+            - '@monolog.logger.contao'
+
+    contao_push.repository.push:
+        class: SimonReitinger\ContaoPushBundle\Repository\PushRepository
+        public: true
+        arguments:
+            - '@doctrine'
+        tags:
+            - { name: doctrine.repository_service }
