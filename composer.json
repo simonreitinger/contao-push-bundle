@@ -14,7 +14,8 @@
     },
     "require-dev": {
         "contao/manager-plugin": "^2.0",
-        "friendsofphp/php-cs-fixer": "^2.14"
+        "friendsofphp/php-cs-fixer": "^2.14",
+        "phpunit/phpunit": "^8.5"
     },
     "conflict": {
         "contao/manager-plugin": "<2.0 || >=3.0"
@@ -25,6 +26,11 @@
     "autoload": {
         "psr-4": {
             "SimonReitinger\\ContaoPushBundle\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SimonReitinger\\ContaoPushBundle\\Tests\\": "tests"
         }
     }
 }
