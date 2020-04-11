@@ -9,11 +9,11 @@ declare(strict_types=1);
 
 namespace SimonReitinger\ContaoPushBundle\Controller;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Minishlink\WebPush\Subscription;
-use Minishlink\WebPush\WebPush;
 use Psr\Log\LoggerInterface;
-use SimonReitinger\ContaoPushBundle\Model\PushModel;
-use SimonReitinger\ContaoPushBundle\Model\PushProvider;
+use SimonReitinger\ContaoPushBundle\Entity\Push;
+use SimonReitinger\ContaoPushBundle\Repository\PushRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,18 +22,24 @@ use Symfony\Component\Routing\Annotation\Route;
 class PushController extends AbstractController
 {
     /**
-     * @var PushProvider
+     * @var EntityManagerInterface
      */
-    private $provider;
+    private $em;
+
+    /**
+     * @var PushRepository
+     */
+    private $pushRepository;
 
     /**
      * @var LoggerInterface
      */
     private $logger;
 
-    public function __construct(PushProvider $provider, LoggerInterface $logger)
+    public function __construct(EntityManagerInterface $em, PushRepository $pushRepository, LoggerInterface $logger)
     {
-        $this->provider = $provider;
+        $this->em = $em;
+        $this->pushRepository = $pushRepository;
         $this->logger = $logger;
     }
 
@@ -45,40 +51,45 @@ class PushController extends AbstractController
         $payload = json_decode($request->getContent(), true);
 
         if (!$payload) {
-            return new Response('', 400);
+            return new Response('Please provide a valid JSON payload', Response::HTTP_BAD_REQUEST);
         }
 
-        /** @var PushModel $push */
-        $push = $this->provider->getPushByAuthToken($payload['authToken']);
+        /** @var Push $push */
+        $push = $this->pushRepository->findOneBy(['authToken' => $payload['authToken']]);
         $subscription = Subscription::create($payload);
-
-        // TODO logs
 
         switch ($request->getMethod()) {
             case 'POST':
-                $push = new PushModel();
-                $this->updatePush($push, $subscription);
-                break;
+                $this->updatePush($subscription, $push);
+
+                return new Response('1', Response::HTTP_CREATED);
             case 'PUT':
-                if ($push) {
-                    $this->updatePush($push, $subscription);
-                }
-                break;
+                $this->updatePush($subscription, $push);
+
+                return new Response('1', Response::HTTP_OK);
             case 'DELETE':
-                $push->delete();
-                break;
+                if ($push) {
+                    $this->em->remove($push);
+
+                    return new Response('', Response::HTTP_NO_CONTENT);
+                }
         }
 
-        return new Response('', Response::HTTP_OK);
+        return new Response('', Response::HTTP_METHOD_NOT_ALLOWED);
     }
 
-    private function updatePush(PushModel $push, Subscription $subscription)
+    private function updatePush(Subscription $subscription, ?Push $push): void
     {
+        if ($push === null) {
+            $push = new Push();
+        }
+
         $push->setAuthToken($subscription->getAuthToken());
         $push->setContentEncoding($subscription->getContentEncoding());
         $push->setEndpoint($subscription->getEndpoint());
         $push->setPublicKey($subscription->getPublicKey());
 
-        $push->save();
+        $this->em->persist($push);
+        $this->em->flush();
     }
 }

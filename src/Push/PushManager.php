@@ -1,14 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
+/*
+ * This file is part of the Contao Push Bundle.
+ * (c) Werbeagentur Dreibein GmbH
+ */
+
 namespace SimonReitinger\ContaoPushBundle\Push;
 
 use Contao\CoreBundle\Monolog\ContaoContext;
+use Doctrine\ORM\EntityManagerInterface;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\WebPush;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
-use SimonReitinger\ContaoPushBundle\Model\PushModel;
-use SimonReitinger\ContaoPushBundle\Model\PushProvider;
+use SimonReitinger\ContaoPushBundle\Entity\Push;
 
 class PushManager
 {
@@ -18,9 +25,9 @@ class PushManager
     private $push;
 
     /**
-     * @var PushProvider
+     * @var EntityManagerInterface
      */
-    private $provider;
+    private $em;
 
     /**
      * @var LoggerInterface
@@ -30,39 +37,42 @@ class PushManager
     /**
      * PushManager constructor.
      */
-    public function __construct(WebPush $push, PushProvider $provider, LoggerInterface $logger)
+    public function __construct(WebPush $push, EntityManagerInterface $em, LoggerInterface $logger)
     {
         $this->push = $push;
-        $this->provider = $provider;
+        $this->em = $em;
         $this->logger = $logger;
     }
 
-    public function sendNotification(string $title, string $body)
+    public function sendNotification(string $title, string $body, string $url): void
     {
-        $subscriptions = $this->provider->getAll();
+        $subscriptions = $this->em->getRepository(Push::class)->findAll();
 
         $payload = \json_encode([
             'title' => $title,
             'body' => $body,
+            'data' => [
+                'url' => $url,
+            ],
         ]);
 
-        /** @var array<PushModel> $sub */
+        /** @var array<Push> $sub */
         foreach ($subscriptions as $sub) {
-            $subscription = Subscription::create($sub->row());
+            $subscription = Subscription::create($sub->toArray());
             $this->push->sendNotification($subscription, $payload);
         }
 
         $this->flushNotifications();
     }
 
-    private function flushNotifications()
+    private function flushNotifications(): void
     {
         $context = [
-            'contao' => new ContaoContext(__METHOD__, ContaoContext::GENERAL)
+            'contao' => new ContaoContext(__METHOD__, ContaoContext::GENERAL),
         ];
 
         foreach ($this->push->flush() as $report) {
-            $endpoint = (string)$report->getRequest()->getUri();
+            $endpoint = (string) $report->getRequest()->getUri();
 
             if ($report->isSuccess()) {
                 $this->logger->log(LogLevel::INFO, "Message sent successfully for subscription {$endpoint}.", $context);
