@@ -1,16 +1,15 @@
 if ('serviceWorker' in navigator) {
-    document.addEventListener('load', () => {
-        const applicationServerKey = 'BGjSJnKEUcSelamQvafBLkl64jzJHGG4YWcD9OnNR34aAdluOr0fo4hWbXzAISL92k6KEsm2hVyGXCJICYamXvw';
+    document.addEventListener('DOMContentLoaded', () => {
         let isPushEnabled = false;
 
-        const enableButton = document.getElementById('enable-push-subscription-button');
-        const disableButton = document.getElementById('disable-push-subscription-button');
-        if (!enableButton || !disableButton) {
+        const pushButton = document.getElementById('push-subscription-button');
+        if (!pushButton) {
             return;
         }
 
-        enableButton.addEventListener('click', pushSubscribe);
-        disableButton.addEventListener('click', pushUnsubscribe);
+        pushButton.addEventListener('click', function() {
+            isPushEnabled ? pushUnsubscribe() : pushSubscribe();
+        });
 
         if (!('serviceWorker' in navigator)) {
             console.warn('Service workers are not supported by this browser');
@@ -27,7 +26,7 @@ if ('serviceWorker' in navigator) {
         if (!('showNotification' in ServiceWorkerRegistration.prototype)) {
             console.warn('Notifications are not supported by this browser');
             changePushButtonState('incompatible');
-            return;
+            return; 
         }
 
         // Check the current Notification permission.
@@ -38,7 +37,7 @@ if ('serviceWorker' in navigator) {
             return;
         }
 
-        navigator.serviceWorker.register('/bundles/contaopush/sw.js').then(
+        navigator.serviceWorker.register('/contao-push-sw.js', {scope: '/'}).then(
             () => {
                 console.log('[SW] Service worker has been registered');
                 pushUpdateSubscription();
@@ -53,21 +52,19 @@ if ('serviceWorker' in navigator) {
             switch (state) {
                 case 'enabled':
                     isPushEnabled = true;
-                    enableButton.disabled = isPushEnabled;
-                    disableButton.disabled = !isPushEnabled;
+                    pushButton.disabled = false;
+                    pushButton.textContent = pushButton.dataset.disable;
                     break;
                 case 'disabled':
                     isPushEnabled = false;
-                    enableButton.disabled = isPushEnabled;
-                    disableButton.disabled = !isPushEnabled;
+                    pushButton.disabled = false;
+                    pushButton.textContent = pushButton.dataset.enable;
                     break;
                 case 'computing':
-                    enableButton.disabled = true;
-                    disableButton.disabled = true;
+                    pushButton.disabled = true;
                     break;
                 case 'incompatible':
-                    enableButton.disabled = true;
-                    disableButton.disabled = true;
+                    pushButton.disabled = true;
                     console.error('Push notifications are not compatible with this browser');
                     break;
                 default:
