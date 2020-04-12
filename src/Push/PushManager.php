@@ -11,11 +11,12 @@ namespace SimonReitinger\ContaoPushBundle\Push;
 
 use Contao\CoreBundle\Monolog\ContaoContext;
 use Doctrine\ORM\EntityManagerInterface;
+use Minishlink\WebPush\MessageSentReport;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\WebPush;
 use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
 use SimonReitinger\ContaoPushBundle\Entity\Push;
+use SimonReitinger\ContaoPushBundle\Repository\PushRepository;
 
 class PushManager
 {
@@ -35,18 +36,21 @@ class PushManager
     private $logger;
 
     /**
-     * PushManager constructor.
+     * @var PushRepository
      */
-    public function __construct(WebPush $push, EntityManagerInterface $em, LoggerInterface $logger)
+    private $pushRepository;
+
+    public function __construct(WebPush $push, EntityManagerInterface $em, PushRepository $pushRepository, LoggerInterface $logger)
     {
         $this->push = $push;
         $this->em = $em;
+        $this->pushRepository = $pushRepository;
         $this->logger = $logger;
     }
 
-    public function sendNotification(string $title, string $body, string $url): void
+    public function sendNotification(string $title, string $body, $data = []): void
     {
-        $subscriptions = $this->em->getRepository(Push::class)->findAll();
+        $subscriptions = $this->pushRepository->findAll();
 
         $payload = \json_encode([
             'title' => $title,
