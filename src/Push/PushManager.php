@@ -55,9 +55,7 @@ class PushManager
         $payload = \json_encode([
             'title' => $title,
             'body' => $body,
-            'data' => [
-                'url' => $url,
-            ],
+            'data' => $data,
         ]);
 
         /** @var array<Push> $sub */
@@ -79,10 +77,12 @@ class PushManager
             $endpoint = (string) $report->getRequest()->getUri();
 
             if ($report->isSuccess()) {
-                $this->logger->log(LogLevel::INFO, "Message sent successfully for subscription {$endpoint}.", $context);
-            } else {
-                $this->logger->log(LogLevel::ERROR, "Message failed to sent for subscription {$endpoint}: {$report->getReason()}", $context);
+                $this->logger->info("Message sent successfully for subscription {$endpoint}.", $context);
+
+                continue;
             }
+
+            $this->logger->error("Message failed to sent for subscription {$endpoint}: {$report->getReason()}", $context);
         }
     }
 }
