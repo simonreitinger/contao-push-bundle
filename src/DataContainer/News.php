@@ -52,8 +52,9 @@ class News
         }
 
         $this->framework->initialize();
-
+        $controller = $this->framework->getAdapter(Controller::class);
         $adapter = $this->framework->getAdapter(NewsModel::class);
+
         $model = $adapter->findByPk($dc->id);
 
         $title = $model->headline;
@@ -61,9 +62,9 @@ class News
         $url = sprintf(
             '%s/%s',
             $request->getSchemeAndHttpHost(),
-            Controller::replaceInsertTags(sprintf('{{news_url::%s}}', $dc->id))
+            $controller->replaceInsertTags(sprintf('{{news_url::%s}}', $dc->id))
         );
 
-        $this->manager->sendNotification($title, $body, $url);
+        $this->manager->sendNotification($title, $body, ['url' => $url]);
     }
 }
