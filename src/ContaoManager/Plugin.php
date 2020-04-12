@@ -17,9 +17,9 @@ use Contao\ManagerPlugin\Config\ConfigPluginInterface;
 use Contao\ManagerPlugin\Config\ContainerBuilder;
 use Contao\ManagerPlugin\Config\ExtensionPluginInterface;
 use Contao\ManagerPlugin\Routing\RoutingPluginInterface;
+use Contao\NewsBundle\ContaoNewsBundle;
 use Minishlink\Bundle\WebPushBundle\MinishlinkWebPushBundle;
 use SimonReitinger\ContaoPushBundle\ContaoPushBundle;
-use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\Config\Loader\LoaderResolverInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
@@ -35,8 +35,8 @@ class Plugin implements BundlePluginInterface, ConfigPluginInterface, RoutingPlu
             BundleConfig::create(MinishlinkWebPushBundle::class),
             BundleConfig::create(ContaoPushBundle::class)
                 ->setLoadAfter([
-                    FrameworkBundle::class,
                     ContaoCoreBundle::class,
+                    ContaoNewsBundle::class,
                     MinishlinkWebPushBundle::class,
                 ]),
         ];
