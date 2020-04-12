@@ -9,7 +9,9 @@
         }
     ],
     "require": {
+        "ext-json": "*",
         "contao/core-bundle": "^4.8",
+        "contao/news-bundle": "^4.8",
         "minishlink/web-push-bundle": "^5.0"
     },
     "require-dev": {

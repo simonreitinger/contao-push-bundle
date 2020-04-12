@@ -2,5 +2,9 @@
 composer.lock
 package-lock.json
 
+/.vscode/
+/.idea/
+
+
 /node_modules/
 /vendor/

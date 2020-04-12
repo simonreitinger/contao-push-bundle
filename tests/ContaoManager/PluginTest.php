@@ -9,8 +9,11 @@ declare(strict_types=1);
 
 namespace SimonReitinger\ContaoPushBundle\Tests\ContaoManager;
 
+use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\ManagerPlugin\Bundle\Config\BundleConfig;
 use Contao\ManagerPlugin\Bundle\Parser\ParserInterface;
+use Contao\ManagerPlugin\Config\ContainerBuilder;
+use Contao\NewsBundle\ContaoNewsBundle;
 use Minishlink\Bundle\WebPushBundle\MinishlinkWebPushBundle;
 use PHPUnit\Framework\TestCase;
 use SimonReitinger\ContaoPushBundle\ContaoManager\Plugin;
@@ -48,7 +51,20 @@ class PluginTest extends TestCase
         $this->assertCount(2, $bundles);
 
         $this->assertEquals(MinishlinkWebPushBundle::class, $bundles[0]->getName());
+        $this->assertSame(
+            [],
+            $bundles[0]->getLoadAfter()
+        );
+
         $this->assertEquals(ContaoPushBundle::class, $bundles[1]->getName());
+        $this->assertSame(
+            [
+                ContaoCoreBundle::class,
+                ContaoNewsBundle::class,
+                MinishlinkWebPushBundle::class,
+            ],
+            $bundles[1]->getLoadAfter()
+        );
     }
 
     public function testGetRouteCollection(): void
@@ -73,5 +89,42 @@ class PluginTest extends TestCase
         $plugin = new Plugin();
 
         $plugin->getRouteCollection($resolver, $kernel);
+    }
+
+    public function testGetExtensionConfigAddsTranslations(): void
+    {
+        $plugin = new Plugin();
+        $container = $this->createMock(ContainerBuilder::class);
+
+        $extensionConfigs = [
+            [
+                'translator' => [
+                    'paths' => [],
+                ],
+            ],
+        ];
+
+        $modifiedConfig = $plugin->getExtensionConfig('framework', $extensionConfigs, $container);
+
+        $this->assertCount(1, $modifiedConfig[0]['translator']['paths']);
+    }
+
+    public function testGetExtensionConfigAddsDoctrineMapping(): void
+    {
+        $plugin = new Plugin();
+        $container = $this->createMock(ContainerBuilder::class);
+
+        $extensionConfigs = [
+            [
+                'orm' => [
+                    'mappings' => [],
+                ],
+            ],
+        ];
+
+        $modifiedConfig = $plugin->getExtensionConfig('doctrine', $extensionConfigs, $container);
+
+        $this->assertCount(1, $modifiedConfig[0]['orm']['mappings']);
+        $this->assertArrayHasKey('ContaoPushBundle', $modifiedConfig[0]['orm']['mappings']);
     }
 }
