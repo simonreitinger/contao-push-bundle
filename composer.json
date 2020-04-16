@@ -1,7 +1,8 @@
 {
     "name": "simonreitinger/contao-push-bundle",
-    "description": "Add Push Notifications to your Contao website",
+    "description": "Add Push Notifications to your Contao installation",
     "type": "contao-bundle",
+    "license": "MIT",
     "authors": [
         {
             "name": "Simon Reitinger",
@@ -10,8 +11,8 @@
     ],
     "require": {
         "ext-json": "*",
-        "contao/core-bundle": "^4.8",
-        "contao/news-bundle": "^4.8",
+        "contao/core-bundle": "^4.9",
+        "contao/news-bundle": "^4.9",
         "minishlink/web-push-bundle": "^5.0"
     },
     "require-dev": {
