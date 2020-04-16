@@ -5,8 +5,6 @@ services:
             - '@doctrine.orm.entity_manager'
             - '@contao_push.repository.push'
             - '@monolog.logger.contao'
-        tags:
-            - { name: controller.argument_value_resolver }
 
     contao_push.controller.module_push_notification_button:
         class: SimonReitinger\ContaoPushBundle\Controller\FrontendModule\PushNotificationButton
